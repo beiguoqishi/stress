@@ -1,0 +1,114 @@
+# NCT考试清除
+import csv
+import time
+import pymysql
+
+
+# 清除考试数据
+def clear_eaxm():
+    # 创建数据库连接--test数据库
+    conn = pymysql.connect(
+        host="rm-bp1326x2083c1021v.mysql.rds.aliyuncs.com",
+        user='test_all',
+        password='Mfi38IHf4hGHGh',
+        port=3306,
+        database='nct_examination'
+    )
+
+    # 创建游标对象
+    cursor = conn.cursor()
+
+    # 读取 CSV 文件并准备批量插入数据
+    batch_size = 1  # 每次批量插入的行数
+    user_id_data = []
+
+    with open('/Users/fanny/Desktop/codecamp_tbl_class.csv', 'r', encoding='utf-8') as f:
+        # f.readline()  # 跳过标题行
+        line1 = f.readline()
+        print(line1)
+
+        i = 0  # 班级id数组索引
+        x = 1
+        items = []
+        while line1:
+            arr = line1.strip().split(',')
+            user_id = arr[0]
+            record = (user_id)
+            class_id = class_id_data[i]
+            item = (record, class_id)
+            items.append(item)
+
+            if len(items) >= batch_size:
+                sql = """
+                               INSERT INTO codecamp.tbl_class (id, term_id, name, teacher_id, type, batch, performance_group, upper_limit, warn_limit, enrollment_progress,
+                                    enrollment_status, enroll_operation_state, term_begin_time, term_finish_time, creator_id, creator_internal_id,
+                                    lower_limit, opening_ceremony_time, study_lecture_time, graduation_awards_time, class_type, updated_at, created_at,
+                                    version, is_deleted, class_pool_id)
+                                VALUES (%s, 16648, %s, 14331, '1', 1, '31', 250, 280, 1, 3, 10, 1746851700, 1778992500, 0, 441, 200, 0, 0, 0, 0, '2025-08-11 16:54:16', '2023-02-14 13:56:04', 1, 0, 0);
+                           """
+                print(sql)
+
+                start_time = time.time()
+                cursor.executemany(sql, items)
+                conn.commit()
+
+                end_time = time.time()
+                print(f"insert take {end_time - start_time}s")
+                items = []  # 清空数据列表
+
+            if x % 30 == 0:  # 一个班级装30人，当x整除30，i+1
+                i = i + 1
+                print(i)
+            x = x + 1
+            line1 = f.readline()
+
+
+    # 创建游标对象
+    cursor = conn.cursor()
+
+    # 读取 CSV 文件并准备批量插入数据
+    batch_size = 1  # 每次批量插入的行数
+
+    with open('/Users/fanny/Desktop/xingneng/NCT/student_id.csv', 'r', encoding='utf-8') as f:
+        # f.readline()  # 跳过标题行
+        line1 = f.readline()
+
+        EXAMINATION_ID = 1488
+        i = 0  # 班级id数组索引
+        x = 1
+        items = []
+        while line1:
+            arr = line1.strip().split(',')
+            student_id = arr[0]
+            print(student_id)
+            record = (student_id)
+            item = (record)
+            items.append(item)
+
+            if len(items) >= batch_size:
+                sql1="DELETE FROM stud_paper WHERE examination_id={EXAMINATION_ID} AND student_id={student_id};"
+                # sql2="DELETE FROM stud_paper_question WHERE examination_id={EXAMINATION_ID} AND student_id={student_id};";
+                # sql3=f"""
+                #             UPDATE exam_examination_student
+                #             SET student_waiting_time=NULL,
+                #                 student_begin_time=NULL,
+                #                 student_submit_time=NULL,
+                #                 student_segment_one_submit_time=NULL,
+                #                 student_auth_times=0,
+                #                 student_invigilate_ai_times=0,
+                #                 student_screen_toggle_times=0,
+                #                 student_monitor_url=null
+                #             WHERE examination_id={EXAMINATION_ID} AND student_id={student_id};
+                #             """
+
+
+                cursor.execute(sql1, item)
+                # cursor.execute(sql2, items)
+                # cursor.execute(sql3, items)
+                conn.commit()
+                items = []  # 清空数据列表
+
+            line1 = f.readline()
+
+if __name__ == '__main__':
+    clear_eaxm()
